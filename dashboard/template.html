@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReturnShield AI — Fraud Detection Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#05070d;
+    --bg-deep:#0a0f1e;
+    --blue-electric:#3b82f6;
+    --blue-cyan:#22d3ee;
+    --blue-glow:rgba(59,130,246,0.35);
+    --white:#f4f7ff;
+    --white-dim:rgba(244,247,255,0.62);
+    --white-faint:rgba(244,247,255,0.34);
+    --glass-fill:rgba(255,255,255,0.045);
+    --glass-fill-strong:rgba(255,255,255,0.075);
+    --glass-border:rgba(255,255,255,0.09);
+    --risk-high:#ff5470;
+    --risk-med:#ffb454;
+    --risk-low:#3ddc97;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(59,130,246,0.16), transparent 60%),
+      radial-gradient(1000px 600px at 100% 0%, rgba(34,211,238,0.10), transparent 55%),
+      var(--bg-void);
+    color:var(--white);
+    min-height:100vh;
+    padding:28px clamp(16px,4vw,48px) 80px;
+  }
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15); border-radius:8px;}
+
+  .glass{
+    background:var(--glass-fill);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    backdrop-filter:blur(20px) saturate(140%);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:20px; flex-wrap:wrap;
+    margin-bottom:26px;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg, var(--blue-electric), var(--blue-cyan));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 24px var(--blue-glow);
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:24px; height:24px;}
+  .brand h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:22px; letter-spacing:0.2px;
+  }
+  .brand p{font-size:12.5px; color:var(--white-faint); margin-top:2px; letter-spacing:0.3px;}
+  .header-actions{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .live-pill{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 14px; font-size:12.5px; color:var(--white-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .live-dot{width:8px; height:8px; border-radius:50%; background:var(--risk-low);
+    box-shadow:0 0 10px var(--risk-low); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.35;}}
+  button.primary{
+    background:linear-gradient(135deg, var(--blue-electric), var(--blue-cyan));
+    border:none; color:#04101f; font-weight:600; font-size:13.5px;
+    padding:11px 20px; border-radius:11px; cursor:pointer;
+    box-shadow:0 4px 20px var(--blue-glow);
+    transition:transform .15s ease, box-shadow .15s ease;
+    font-family:'Inter',sans-serif;
+  }
+  button.primary:hover{transform:translateY(-1px); box-shadow:0 6px 26px rgba(59,130,246,0.5);}
+  button.primary:active{transform:translateY(0);}
+  button.ghost{
+    background:var(--glass-fill-strong); border:1px solid var(--glass-border);
+    color:var(--white); font-size:13px; font-weight:500;
+    padding:10px 16px; border-radius:11px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  button.ghost:hover{background:rgba(255,255,255,0.11);}
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:22px;
+  }
+  @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+  .kpi{padding:18px 20px;}
+  .kpi .label{font-size:11.5px; color:var(--white-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;}
+  .kpi .value{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;}
+  .kpi .sub{font-size:11.5px; color:var(--white-faint); margin-top:6px;}
+  .kpi.risk-high .value{color:var(--risk-high);}
+  .kpi.risk-accent .value{background:linear-gradient(135deg,var(--blue-cyan),var(--blue-electric)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+
+  /* ---------- Main grid ---------- */
+  .main-grid{
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:18px; margin-bottom:18px;
+    align-items:start;
+  }
+  @media (max-width:980px){.main-grid{grid-template-columns:1fr;}}
+
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 14px;
+  }
+  .panel-head h2{font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600;}
+  .panel-head span.count{font-size:11.5px; color:var(--white-faint); font-family:'JetBrains Mono',monospace;}
+
+  /* Case queue */
+  #case-list{max-height:620px; overflow-y:auto; padding:0 10px 14px;}
+  .case-row{
+    display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:14px;
+    padding:13px 12px; border-radius:12px; cursor:pointer;
+    border:1px solid transparent; margin-bottom:6px;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .case-row:hover{background:rgba(255,255,255,0.05); border-color:var(--glass-border);}
+  .case-row.selected{background:rgba(59,130,246,0.10); border-color:rgba(59,130,246,0.4);}
+  .risk-chip{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    padding:4px 9px; border-radius:20px; letter-spacing:0.5px; text-align:center; width:64px;
+  }
+  .risk-chip.HIGH{background:rgba(255,84,112,0.16); color:var(--risk-high); border:1px solid rgba(255,84,112,0.4);}
+  .risk-chip.MEDIUM{background:rgba(255,180,84,0.16); color:var(--risk-med); border:1px solid rgba(255,180,84,0.4);}
+  .risk-chip.LOW{background:rgba(61,220,151,0.14); color:var(--risk-low); border:1px solid rgba(61,220,151,0.35);}
+  .case-main .rid{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--white-dim);}
+  .case-main .meta{font-size:13px; margin-top:2px;}
+  .case-main .meta b{color:var(--white);}
+  .case-prob{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; text-align:right; min-width:52px;}
+  .case-value{font-size:12.5px; color:var(--white-faint); text-align:right; min-width:70px;}
+  .new-case{animation:slideIn .5s ease;}
+  @keyframes slideIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* Detail panel */
+  #detail-panel{padding:20px 22px 22px; min-height:400px;}
+  .empty-state{color:var(--white-faint); font-size:13.5px; padding:40px 10px; text-align:center;}
+  .detail-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;}
+  .fraud-gauge{
+    display:flex; align-items:baseline; gap:6px; font-family:'Space Grotesk',sans-serif;
+  }
+  .fraud-gauge .num{font-size:40px; font-weight:700;}
+  .fraud-gauge .pct{font-size:16px; color:var(--white-faint);}
+  .agent-scores{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0;}
+  .agent-score{padding:12px; border-radius:12px; background:rgba(255,255,255,0.035); border:1px solid var(--glass-border);}
+  .agent-score .name{font-size:10.5px; color:var(--white-faint); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;}
+  .agent-score .num{font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700;}
+  .bar-track{height:5px; border-radius:4px; background:rgba(255,255,255,0.08); margin-top:8px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:4px;}
+  .reasons-block{margin-top:16px;}
+  .reasons-block h3{font-size:12px; text-transform:uppercase; letter-spacing:0.7px; color:var(--white-faint); margin-bottom:9px;}
+  .reasons-block ul{list-style:none;}
+  .reasons-block li{
+    font-size:13px; padding:8px 0 8px 20px; position:relative; color:var(--white-dim);
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .reasons-block li:before{content:"▸"; position:absolute; left:0; color:var(--blue-cyan);}
+  .recommendation-box{
+    margin-top:16px; padding:14px 16px; border-radius:12px;
+    font-size:13.5px; font-weight:500; display:flex; gap:10px; align-items:flex-start;
+  }
+  .recommendation-box.HIGH{background:rgba(255,84,112,0.10); border:1px solid rgba(255,84,112,0.35); color:#ffc2cd;}
+  .recommendation-box.MEDIUM{background:rgba(255,180,84,0.10); border:1px solid rgba(255,180,84,0.35); color:#ffe1b8;}
+  .recommendation-box.LOW{background:rgba(61,220,151,0.10); border:1px solid rgba(61,220,151,0.3); color:#c1f5dd;}
+  .chat-transcript{
+    margin-top:16px; padding:14px 16px; border-radius:12px; background:rgba(0,0,0,0.25);
+    font-size:12.5px; line-height:1.6; color:var(--white-dim); white-space:pre-wrap;
+    font-family:'JetBrains Mono',monospace; max-height:140px; overflow-y:auto;
+  }
+  .warehouse-note{
+    margin-top:12px; padding:12px 14px; border-radius:12px; font-size:12.5px;
+    background:rgba(34,211,238,0.08); border:1px dashed rgba(34,211,238,0.4); color:#bdeeff;
+  }
+
+  /* ---------- Lower grid: models / shap / impact ---------- */
+  .lower-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:18px;}
+  @media (max-width:980px){.lower-grid{grid-template-columns:1fr;}}
+
+  table.model-table{width:100%; border-collapse:collapse; font-size:13px;}
+  table.model-table th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px;
+    color:var(--white-faint); padding:8px 12px; border-bottom:1px solid var(--glass-border);
+  }
+  table.model-table td{padding:11px 12px; border-bottom:1px solid rgba(255,255,255,0.04);}
+  table.model-table tr.best td{color:var(--blue-cyan); font-weight:600;}
+  .best-tag{
+    font-size:9.5px; background:rgba(34,211,238,0.15); color:var(--blue-cyan);
+    padding:2px 7px; border-radius:20px; margin-left:8px; letter-spacing:0.4px;
+  }
+  .model-name-cell{display:flex; align-items:center;}
+
+  .shap-row{display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:0 20px;}
+  .shap-row .feat{font-size:12px; color:var(--white-dim); width:150px; flex-shrink:0; font-family:'JetBrains Mono',monospace;}
+  .shap-row .track{flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:6px; overflow:hidden;}
+  .shap-row .fill{height:100%; border-radius:6px; background:linear-gradient(90deg, var(--blue-electric), var(--blue-cyan));}
+  .shap-row .val{font-size:11.5px; color:var(--white-faint); width:52px; text-align:right; font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- Business impact ---------- */
+  .impact-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;}
+  @media (max-width:980px){.impact-row{grid-template-columns:1fr;}}
+  .impact-card{padding:20px;}
+  .impact-card .icon{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    background:rgba(59,130,246,0.14); margin-bottom:12px;}
+  .impact-card .big{font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; margin-bottom:4px;}
+  .impact-card .lbl{font-size:12.5px; color:var(--white-faint);}
+  .impact-note{font-size:11px; color:var(--white-faint); padding:0 20px 18px; line-height:1.6;}
+
+  /* ---------- Vision agent / camera ---------- */
+  .vision-panel{padding:20px 22px 22px;}
+  .camera-wrap{
+    position:relative; border-radius:14px; overflow:hidden; background:#000;
+    aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--glass-border); margin-bottom:14px;
+  }
+  #camera-video, #camera-canvas{width:100%; height:100%; object-fit:cover; display:none;}
+  #camera-placeholder{color:var(--white-faint); font-size:13px; text-align:center; padding:20px;}
+  .camera-controls{display:flex; gap:10px; flex-wrap:wrap;}
+  #vision-result{margin-top:14px;}
+  input[type=file]{display:none;}
+
+  /* ---------- Comments / review workflow ---------- */
+  .comments-block{margin-top:18px;}
+  .comment-item{
+    display:flex; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+    font-size:12.5px; align-items:flex-start;
+  }
+  .comment-avatar{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--blue-electric),var(--blue-cyan));
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#04101f; font-family:'Space Grotesk',sans-serif;
+  }
+  .comment-body .who{font-size:11px; color:var(--white-faint); margin-bottom:2px;}
+  .comment-body .who b{color:var(--white-dim);}
+  .action-tag{font-size:9.5px; padding:2px 7px; border-radius:20px; margin-left:6px; letter-spacing:0.4px; font-family:'JetBrains Mono',monospace;}
+  .action-tag.escalate{background:rgba(255,84,112,0.16); color:var(--risk-high);}
+  .action-tag.approve{background:rgba(61,220,151,0.14); color:var(--risk-low);}
+  .action-tag.reject{background:rgba(255,84,112,0.16); color:var(--risk-high);}
+  .action-tag.note{background:rgba(255,255,255,0.08); color:var(--white-dim);}
+  .comment-form{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .comment-form textarea{
+    flex:1 1 100%; min-height:56px; resize:vertical;
+    background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:10px;
+    color:var(--white); font-family:'Inter',sans-serif; font-size:12.5px; padding:10px 12px;
+  }
+  .comment-form textarea:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .comment-form select, .comment-form input[type=text]{
+    background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:10px;
+    color:var(--white); font-size:12px; padding:8px 10px; font-family:'Inter',sans-serif;
+  }
+  .comment-form select option{background:var(--bg-deep);}
+
+  /* ---------- Invoice + transcript tools ---------- */
+  .tools-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;}
+  @media (max-width:980px){.tools-grid{grid-template-columns:1fr;}}
+  .tool-panel{padding:20px 22px 22px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+  .field-row label, .field-full label{font-size:11px; color:var(--white-faint); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;}
+  .field-row input, .field-full input, .field-full textarea{
+    width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border);
+    border-radius:10px; color:var(--white); font-size:13px; padding:9px 11px; font-family:'Inter',sans-serif;
+  }
+  .field-full textarea{min-height:110px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6;}
+  .field-row input:focus, .field-full input:focus, .field-full textarea:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .field-full{margin-bottom:10px;}
+  .drop-zone{
+    border:1.5px dashed rgba(59,130,246,0.45); border-radius:12px; padding:22px;
+    text-align:center; color:var(--white-faint); font-size:12.5px; cursor:pointer;
+    transition:background .15s ease, border-color .15s ease; margin-bottom:12px;
+  }
+  .drop-zone:hover, .drop-zone.drag{background:rgba(59,130,246,0.07); border-color:var(--blue-cyan);}
+  .drop-zone .file-name{color:var(--blue-cyan); font-family:'JetBrains Mono',monospace; margin-top:6px;}
+  .verdict-chip{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+    padding:5px 12px; border-radius:20px; letter-spacing:0.5px; margin-bottom:10px;
+  }
+  .verdict-chip.VERIFIED{background:rgba(61,220,151,0.14); color:var(--risk-low); border:1px solid rgba(61,220,151,0.35);}
+  .verdict-chip.REVIEW{background:rgba(255,180,84,0.16); color:var(--risk-med); border:1px solid rgba(255,180,84,0.4);}
+  .verdict-chip.SUSPECT{background:rgba(255,84,112,0.16); color:var(--risk-high); border:1px solid rgba(255,84,112,0.4);}
+
+  footer{text-align:center; color:var(--white-faint); font-size:11.5px; margin-top:30px;}
+  footer a{color:var(--blue-cyan); text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3z" stroke="#04101f" stroke-width="1.8" fill="rgba(4,16,31,0.25)"/><path d="M9 12l2 2 4-4" stroke="#04101f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <h1>ReturnShield AI</h1>
+      <p>Multi-Agent Fraud Detection Platform · Shipment Returns</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="live-pill glass"><span class="live-dot"></span><span id="clock">LIVE</span></div>
+    <button class="ghost" id="reset-btn">Reset feed</button>
+    <button class="primary" id="simulate-btn">▸ Simulate incoming return</button>
+  </div>
+</header>
+
+<section class="kpi-row">
+  <div class="glass kpi"><div class="label">Cases monitored</div><div class="value" id="kpi-total">—</div><div class="sub">rolling live feed</div></div>
+  <div class="glass kpi risk-high"><div class="label">High risk cases</div><div class="value" id="kpi-high">—</div><div class="sub" id="kpi-high-sub">flagged for escalation</div></div>
+  <div class="glass kpi"><div class="label">Avg. fraud probability</div><div class="value" id="kpi-avg">—</div><div class="sub">across live feed</div></div>
+  <div class="glass kpi"><div class="label">Value at risk</div><div class="value" id="kpi-value">—</div><div class="sub">medium + high risk returns</div></div>
+  <div class="glass kpi risk-accent"><div class="label">Best model (F1)</div><div class="value" id="kpi-model">—</div><div class="sub" id="kpi-model-sub">Agent 4 · fraud prediction</div></div>
+</section>
+
+<section class="main-grid">
+  <div class="glass">
+    <div class="panel-head">
+      <h2>Return Case Queue</h2>
+      <span class="count" id="queue-count">0 cases</span>
+    </div>
+    <div id="case-list"></div>
+  </div>
+
+  <div class="glass" id="detail-wrap">
+    <div class="panel-head"><h2>Agent Decision Trace</h2><span class="count">Agents 1–5</span></div>
+    <div id="detail-panel"><div class="empty-state">Select a case from the queue to see the full multi-agent breakdown — pattern, trust, image, ML probability, and the final decision.</div></div>
+  </div>
+</section>
+
+<section class="lower-grid">
+  <div class="glass">
+    <div class="panel-head"><h2>Agent 4 — Model Comparison</h2><span class="count" id="model-count"></span></div>
+    <div style="padding:0 20px 18px;"><table class="model-table" id="model-table"></table></div>
+  </div>
+  <div class="glass">
+    <div class="panel-head"><h2>SHAP Feature Importance</h2><span class="count">explainability</span></div>
+    <div style="padding:14px 0 20px;" id="shap-chart"></div>
+  </div>
+</section>
+
+<div class="panel-head" style="padding:4px 4px 12px;"><h2 style="font-family:'Space Grotesk',sans-serif; font-size:16px;">Business Impact</h2></div>
+<section class="impact-row" id="impact-row"></section>
+<p class="impact-note" id="impact-note"></p>
+
+<section class="tools-grid">
+  <div class="glass tool-panel">
+    <div class="panel-head" style="padding:0 0 14px;"><h2>Agent 6 — Invoice Verification</h2><span class="count">upload + cross-check</span></div>
+    <div class="drop-zone" id="invoice-drop">
+      Drop the customer's invoice here, or click to browse<br>
+      <span style="font-size:11px;">(PDF, JPG, PNG — the document hash is used for duplicate detection)</span>
+      <div class="file-name" id="invoice-file-name"></div>
+    </div>
+    <input type="file" id="invoice-file-input" accept=".pdf,image/*">
+    <div class="field-row">
+      <div><label>Invoice amount ($)</label><input type="number" id="inv-amount" placeholder="e.g. 1299.00"></div>
+      <div><label>Invoice date</label><input type="date" id="inv-date"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Order ID on invoice</label><input type="text" id="inv-order-id" placeholder="ORD-000123"></div>
+      <div><label>Order record amount ($)</label><input type="number" id="inv-order-amount" placeholder="from order system"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Order date (record)</label><input type="date" id="inv-order-date"></div>
+      <div><label>Delivery date (record)</label><input type="date" id="inv-delivery-date"></div>
+    </div>
+    <button class="primary" id="verify-invoice-btn" style="margin-top:6px;">Verify invoice</button>
+    <div id="invoice-result" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="glass tool-panel">
+    <div class="panel-head" style="padding:0 0 14px;"><h2>Agent 2 — Live Transcript Analyzer</h2><span class="count">paste any chat</span></div>
+    <div class="field-full">
+      <label>Customer support chat transcript</label>
+      <textarea id="transcript-input" placeholder="Customer: The item never arrived.
+Agent: Our tracking shows it was delivered on Tuesday.
+Customer: I never received it, refund me right now or I will report you."></textarea>
+    </div>
+    <div class="field-row">
+      <div><label>Times this excuse used before (optional)</label><input type="number" id="excuse-count" value="0" min="0"></div>
+      <div style="display:flex; align-items:flex-end;"><button class="primary" id="analyze-transcript-btn" style="width:100%;">Analyze transcript</button></div>
+    </div>
+    <div id="transcript-result" style="margin-top:14px;"></div>
+  </div>
+</section>
+
+<section class="glass vision-panel">
+  <div class="panel-head" style="padding:0 0 16px;"><h2>Agent 3 — Image Verification (live demo)</h2><span class="count">camera / upload</span></div>
+  <div class="camera-wrap">
+    <video id="camera-video" autoplay playsinline muted></video>
+    <canvas id="camera-canvas"></canvas>
+    <div id="camera-placeholder">Camera preview will appear here.<br>Use a secure context (http://localhost or https) for camera access.</div>
+  </div>
+  <div class="camera-controls">
+    <button class="primary" id="start-camera-btn">Open camera</button>
+    <button class="ghost" id="capture-btn" disabled>Capture photo</button>
+    <button class="ghost" id="upload-btn">Upload photo instead</button>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+  <div id="vision-result"></div>
+</section>
+
+<footer>ReturnShield AI — prototype built on 100% synthetic data · Agents: Pattern Detection · NLP Trust · Image Verification · ML Fraud Model (RF/XGBoost/LightGBM/CatBoost) · LLM Decision Agent</footer>
+
+<script id="data-bundle" type="application/json">__DATA_BUNDLE__</script>
+<script>__APP_JS__</script>
+</body>
+</html>
