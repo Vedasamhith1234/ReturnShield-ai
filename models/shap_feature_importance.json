@@ -1,0 +1,58 @@
+[
+  {
+    "feature": "days_before_return",
+    "importance": 0.24084
+  },
+  {
+    "feature": "gps_mismatch_km",
+    "importance": 0.12338
+  },
+  {
+    "feature": "addresses_used",
+    "importance": 0.05336
+  },
+  {
+    "feature": "account_age_days",
+    "importance": 0.02864
+  },
+  {
+    "feature": "prior_fraud_flags",
+    "importance": 0.02532
+  },
+  {
+    "feature": "payment_methods_used",
+    "importance": 0.01997
+  },
+  {
+    "feature": "delivery_time_days",
+    "importance": 0.00768
+  },
+  {
+    "feature": "purchase_value",
+    "importance": 0.00615
+  },
+  {
+    "feature": "shipping_distance_km",
+    "importance": 0.00481
+  },
+  {
+    "feature": "payment_type_enc",
+    "importance": 0.00434
+  },
+  {
+    "feature": "warehouse_enc",
+    "importance": 0.00359
+  },
+  {
+    "feature": "return_frequency",
+    "importance": 0.00306
+  },
+  {
+    "feature": "category_enc",
+    "importance": 0.003
+  },
+  {
+    "feature": "coupon_used",
+    "importance": 0.00136
+  }
+]
