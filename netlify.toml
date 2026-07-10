@@ -1,0 +1,21 @@
+# ReturnShield AI — Netlify configuration
+# The dashboard is a fully self-contained static HTML file (all data, JS, and
+# styles embedded), so no build step or package installation is needed.
+
+[build]
+  publish = "netlify-site"
+  command = "echo 'Static site - nothing to build'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow camera for the Agent 3 image-verification demo
+    Permissions-Policy = "camera=(self)"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
