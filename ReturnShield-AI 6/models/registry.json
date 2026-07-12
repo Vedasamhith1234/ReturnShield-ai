@@ -1,0 +1,11 @@
+[
+  {
+    "run_id": "2026-07-11T13:25:26.558321+00:00",
+    "trigger": "in_process_timer",
+    "started_at": "2026-07-11T13:25:26.558321+00:00",
+    "finished_at": "2026-07-11T13:25:26.566166+00:00",
+    "status": "error",
+    "error": "no such table: labeled_outcomes",
+    "promoted": false
+  }
+]

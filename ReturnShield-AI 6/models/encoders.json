@@ -1,0 +1,29 @@
+{
+  "category": {
+    "Electronics": 0,
+    "Phones": 1,
+    "Laptops": 2,
+    "Apparel": 3,
+    "Shoes": 4,
+    "Home & Kitchen": 5,
+    "Beauty": 6,
+    "Toys": 7,
+    "Sporting Goods": 8,
+    "Jewelry": 9
+  },
+  "payment_type": {
+    "credit_card": 0,
+    "debit_card": 1,
+    "paypal": 2,
+    "gift_card": 3,
+    "buy_now_pay_later": 4
+  },
+  "warehouse": {
+    "DFW1": 0,
+    "ATL2": 1,
+    "ORD3": 2,
+    "LAX4": 3,
+    "JFK5": 4,
+    "SEA6": 5
+  }
+}

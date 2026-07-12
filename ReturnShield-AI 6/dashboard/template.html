@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  // Set the theme attribute before first paint, ahead of the <style> block
+  // below and any other script, so switching back to light mode never
+  // flashes the dark theme for a frame first.
+  (function () {
+    if (localStorage.getItem('rs_theme') === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReturnShield AI — Fraud Detection Platform</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#040a1e">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ReturnShield">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#040a1e;
+    --bg-deep:#0a1436;
+    --blue-electric:#3b82f6;
+    --blue-cyan:#22d3ee;
+    --blue-light:#93c5fd;
+    --blue-glow:rgba(59,130,246,0.4);
+    --blue-light-glow:rgba(147,197,253,0.38);
+    --white:#f8faff;
+    --white-dim:rgba(248,250,255,0.68);
+    --white-faint:rgba(248,250,255,0.38);
+    /* Glass tokens carry a light-blue tint rather than neutral white — this
+       cascades through every panel/border/track that references them, so
+       most of the "enhanced glassmorphism" look comes from these four
+       variables rather than needing to touch each component individually. */
+    --glass-fill:rgba(147,197,253,0.075);
+    --glass-fill-strong:rgba(147,197,253,0.13);
+    --glass-border:rgba(147,197,253,0.24);
+    --glass-highlight:rgba(226,240,255,0.34);
+    --risk-high:#ff5470;
+    --risk-med:#ffb454;
+    --risk-low:#3ddc97;
+    --radius:16px;
+    /* Links/labels/filenames use this instead of --blue-cyan directly —
+       blue-cyan is a fine accent on dark navy (contrast ~9:1) but only
+       1.6:1 on light-mode beige, so it needs a deeper stand-in there. */
+    --accent-text:var(--blue-cyan);
+    /* A 30%-black overlay reads as a nicely recessed dark input field on
+       navy; the same overlay on beige blends toward a muddy khaki instead
+       of a clean field, so this needs its own light-mode value. */
+    --input-bg:rgba(0,0,0,0.3);
+    /* Buttons/tabs are the one thing that switches palette entirely between
+       themes (blue gradient in dark mode, blackish in light mode) rather
+       than just re-tinting — kept as its own variable set so
+       button.primary / .view-switch button.active don't need a duplicated
+       rule under [data-theme="light"]. */
+    --btn-gradient:linear-gradient(135deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));
+    --btn-text:#04101f;
+    --btn-glow:rgba(59,130,246,0.4);
+    --btn-glow-hover:rgba(59,130,246,0.5);
+    --body-gradient:
+      radial-gradient(1300px 760px at 12% -12%, rgba(59,130,246,0.28), transparent 60%),
+      radial-gradient(1100px 650px at 102% 0%, rgba(34,211,238,0.19), transparent 55%),
+      radial-gradient(900px 620px at 60% 8%, rgba(147,197,253,0.16), transparent 58%),
+      radial-gradient(1000px 900px at 50% 115%, rgba(59,130,246,0.12), transparent 62%),
+      linear-gradient(180deg, var(--bg-deep), var(--bg-void) 55%);
+  }
+  /* Light mode: warm beige surfaces + near-black text/buttons, same glass
+     treatment (frosted, blurred, bordered, sheened) as dark mode — only the
+     palette the tokens resolve to changes. Toggled via a data-theme
+     attribute on <html> (see the toggle button + its script, and the
+     anti-flash inline script in <head>), not a class, so it composes
+     cleanly with prefers-color-scheme if that's ever added later. */
+  :root[data-theme="light"]{
+    --bg-void:#e9e0c9;
+    --bg-deep:#f6f0df;
+    --white:#241f18;
+    --white-dim:rgba(36,31,24,0.72);
+    --white-faint:rgba(36,31,24,0.45);
+    --glass-fill:rgba(255,253,246,0.45);
+    --glass-fill-strong:rgba(255,253,246,0.65);
+    --glass-border:rgba(58,48,32,0.16);
+    --glass-highlight:rgba(255,255,255,0.8);
+    --btn-gradient:linear-gradient(135deg, #322c24, #4d4437 55%, #17130f);
+    --btn-text:#f5efe0;
+    --btn-glow:rgba(23,17,10,0.22);
+    --btn-glow-hover:rgba(23,17,10,0.32);
+    /* Deepened versions of the dark-mode risk colors — the originals are
+       tuned to pop against dark navy (contrast 4.6-7.3 there) but drop as
+       low as 1.44:1 used as text/fills against light beige. These measure
+       4.9-6.6:1 as text on beige, and 6-7.2:1 with white text on a solid
+       fill (used by the risk-chip badges below). Every plain-text use of
+       these three variables site-wide (case percentages, KPI values, etc.)
+       gets fixed by this one override — only the chip badges additionally
+       need a white-text treatment, since their dark-mode design is a pale
+       tint + saturated text, which doesn't carry over to a light backdrop. */
+    --risk-high:#b4142d;
+    --risk-med:#8c5808;
+    --risk-low:#0a643e;
+    --accent-text:#0b639e;
+    --input-bg:rgba(255,255,255,0.55);
+    --body-gradient:
+      radial-gradient(1300px 760px at 12% -12%, rgba(58,48,32,0.10), transparent 60%),
+      radial-gradient(1100px 650px at 102% 0%, rgba(59,130,246,0.10), transparent 55%),
+      radial-gradient(900px 620px at 60% 8%, rgba(255,255,255,0.5), transparent 58%),
+      radial-gradient(1000px 900px at 50% 115%, rgba(58,48,32,0.07), transparent 62%),
+      linear-gradient(180deg, var(--bg-deep), var(--bg-void) 55%);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--body-gradient);
+    color:var(--white);
+    min-height:100vh;
+    padding:28px clamp(16px,4vw,48px) 80px;
+    transition:background .25s ease, color .25s ease;
+  }
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:rgba(147,197,253,0.22); border-radius:8px;}
+
+  /* Enhanced glassmorphism: a light-blue-tinted frosted fill, a crisp white
+     top edge, a soft blue ambient glow beneath the card (not just a dark
+     drop shadow — this is what makes it read as "glass lit from a blue
+     source" rather than flat translucency), and a diagonal sheen streak
+     across the top-left for a polished, lit-glass highlight. */
+  .glass{
+    position:relative;
+    background:
+      linear-gradient(165deg, rgba(226,240,255,0.11), rgba(147,197,253,0.03) 55%, rgba(255,255,255,0.02) 100%);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    backdrop-filter:blur(24px) saturate(165%);
+    -webkit-backdrop-filter:blur(24px) saturate(165%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      inset 0 -1px 0 rgba(147,197,253,0.08),
+      0 4px 16px rgba(59,130,246,0.10),
+      0 18px 44px rgba(1,4,16,0.45);
+  }
+  /* border-radius:inherit clips this pseudo-element's own gradient to the
+     card's rounded corners without needing overflow:hidden on .glass
+     itself — that matters because several .glass cards contain buttons/
+     inputs whose hover shadows or focus rings sit close to the card edge,
+     and overflow:hidden there would clip those instead. */
+  .glass::before{
+    content:'';
+    position:absolute; inset:0;
+    border-radius:inherit;
+    background:linear-gradient(120deg, rgba(255,255,255,0.14) 0%, transparent 26%);
+    pointer-events:none;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:20px; flex-wrap:wrap;
+    margin-bottom:26px;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 24px var(--blue-glow);
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:24px; height:24px;}
+  .brand h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:22px; letter-spacing:0.2px;
+  }
+  .brand p{font-size:12.5px; color:var(--white-faint); margin-top:2px; letter-spacing:0.3px;}
+  .header-actions{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .live-pill{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 14px; font-size:12.5px; color:var(--white-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .live-dot{width:8px; height:8px; border-radius:50%; background:var(--risk-low);
+    box-shadow:0 0 10px var(--risk-low); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.35;}}
+  .backend-status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:6px 11px; border-radius:999px;
+    font-family:'JetBrains Mono',monospace; border:1px solid var(--glass-border);
+  }
+  .backend-status-pill::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+  .backend-status-pill.on{color:var(--risk-low); background:rgba(61,220,151,0.1); border-color:rgba(61,220,151,0.3);}
+  .backend-status-pill.off{color:var(--white-faint); background:rgba(255,255,255,0.04);}
+  button.primary{
+    background:var(--btn-gradient);
+    border:none; color:var(--btn-text); font-weight:600; font-size:13.5px;
+    padding:11px 20px; border-radius:11px; cursor:pointer;
+    box-shadow:0 4px 20px var(--btn-glow);
+    transition:transform .15s ease, box-shadow .15s ease, background .25s ease;
+    font-family:'Inter',sans-serif;
+  }
+  button.primary:hover{transform:translateY(-1px); box-shadow:0 6px 26px var(--btn-glow-hover);}
+  button.primary:active{transform:translateY(0);}
+  button.ghost{
+    background:var(--glass-fill-strong); border:1px solid var(--glass-border);
+    color:var(--white); font-size:13px; font-weight:500;
+    padding:10px 16px; border-radius:11px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  button.ghost:hover{background:rgba(147,197,253,0.16);}
+  .theme-toggle{
+    padding:10px 13px; font-size:15px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px;
+  }
+  @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+  .kpi{padding:18px 20px;}
+  .kpi .label{font-size:11.5px; color:var(--white-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;}
+  .kpi .value{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;}
+  .kpi .sub{font-size:11.5px; color:var(--white-faint); margin-top:6px;}
+  .kpi.risk-high .value{color:var(--risk-high);}
+  .kpi.risk-accent .value{background:linear-gradient(135deg,var(--blue-cyan),var(--blue-light) 50%,var(--blue-electric)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  /* dark mode's cyan/light-blue/electric trio drops as low as 1.68:1 on
+     beige — deepened equivalents here measure 5.6-9.7:1. */
+  :root[data-theme="light"] .kpi.risk-accent .value{background-image:linear-gradient(135deg,#0b639e,#1d4ed8 50%,#1e3a8a);}
+
+  /* ---------- Main grid ---------- */
+  .main-grid{
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:18px; margin-bottom:18px;
+    align-items:start;
+  }
+  @media (max-width:980px){.main-grid{grid-template-columns:1fr;}}
+
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 14px;
+  }
+  .panel-head h2{font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600;}
+  .panel-head span.count{font-size:11.5px; color:var(--white-faint); font-family:'JetBrains Mono',monospace;}
+  .panel-head .panel-sub{font-size:11px; color:var(--white-faint); margin-top:3px; font-weight:400;}
+
+  /* Case queue */
+  .queue-filters{display:flex; gap:8px; flex-wrap:wrap; padding:0 20px 12px;}
+  .queue-filters input{flex:1 1 200px;}
+  .queue-filters select{flex:0 0 auto;}
+  .queue-filters input, .queue-filters select{
+    background:var(--input-bg); border:1px solid var(--glass-border); border-radius:10px;
+    color:var(--white); font-size:12.5px; padding:8px 11px; font-family:'Inter',sans-serif;
+  }
+  .queue-filters input:focus, .queue-filters select:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .queue-filters select option{background:var(--bg-deep);}
+  #case-list{max-height:620px; overflow-y:auto; padding:0 10px 14px;}
+  .case-row{
+    display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:14px;
+    padding:13px 12px; border-radius:12px; cursor:pointer;
+    border:1px solid transparent; margin-bottom:6px;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .case-row:hover{background:rgba(147,197,253,0.08); border-color:var(--glass-border);}
+  .case-row.selected{background:rgba(59,130,246,0.10); border-color:rgba(59,130,246,0.4);}
+  .risk-chip{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    padding:4px 9px; border-radius:20px; letter-spacing:0.5px; text-align:center; width:64px;
+  }
+  .risk-chip.HIGH{background:rgba(255,84,112,0.16); color:var(--risk-high); border:1px solid rgba(255,84,112,0.4);}
+  .risk-chip.MEDIUM{background:rgba(255,180,84,0.16); color:var(--risk-med); border:1px solid rgba(255,180,84,0.4);}
+  .risk-chip.LOW{background:rgba(61,220,151,0.14); color:var(--risk-low); border:1px solid rgba(61,220,151,0.35);}
+  /* The pale-tint-on-dark-navy badge above measures well under WCAG AA
+     (as low as 1.44:1) once the backdrop is light beige instead — a pale
+     wash next to pale text stops being readable. Light mode gets a solid
+     fill (the deepened --risk-* variables above) with white text instead;
+     verified at 6-7.2:1 with white text. */
+  :root[data-theme="light"] .risk-chip.HIGH{background:var(--risk-high); color:#fff; border-color:var(--risk-high);}
+  :root[data-theme="light"] .risk-chip.MEDIUM{background:var(--risk-med); color:#fff; border-color:var(--risk-med);}
+  :root[data-theme="light"] .risk-chip.LOW{background:var(--risk-low); color:#fff; border-color:var(--risk-low);}
+  .case-main .rid{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--white-dim);}
+  .case-main .meta{font-size:13px; margin-top:2px;}
+  .case-main .meta b{color:var(--white);}
+  .case-prob{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; text-align:right; min-width:52px;}
+  .case-value{font-size:12.5px; color:var(--white-faint); text-align:right; min-width:70px;}
+  .new-case{animation:slideIn .5s ease;}
+  @keyframes slideIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* Detail panel */
+  #detail-panel{padding:20px 22px 22px; min-height:400px;}
+  .empty-state{color:var(--white-faint); font-size:13.5px; padding:40px 10px; text-align:center;}
+  .detail-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;}
+  .fraud-gauge{
+    display:flex; align-items:baseline; gap:6px; font-family:'Space Grotesk',sans-serif;
+  }
+  .fraud-gauge .num{font-size:40px; font-weight:700;}
+  .fraud-gauge .pct{font-size:16px; color:var(--white-faint);}
+  .agent-scores{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0;}
+  .agent-score{padding:12px; border-radius:12px; background:rgba(147,197,253,0.05); border:1px solid var(--glass-border);}
+  .agent-score .name{font-size:10.5px; color:var(--white-faint); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px;}
+  .agent-score .num{font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700;}
+  .bar-track{height:5px; border-radius:4px; background:rgba(255,255,255,0.08); margin-top:8px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:4px;}
+  .reasons-block{margin-top:16px;}
+  .reasons-block h3{font-size:12px; text-transform:uppercase; letter-spacing:0.7px; color:var(--white-faint); margin-bottom:9px;}
+  .reasons-block ul{list-style:none;}
+  .reasons-block li{
+    font-size:13px; padding:8px 0 8px 20px; position:relative; color:var(--white-dim);
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .reasons-block li:before{content:"▸"; position:absolute; left:0; color:var(--accent-text);}
+  .recommendation-box{
+    margin-top:16px; padding:14px 16px; border-radius:12px;
+    font-size:13.5px; font-weight:500; display:flex; gap:10px; align-items:flex-start;
+  }
+  .recommendation-box.HIGH{background:rgba(255,84,112,0.10); border:1px solid rgba(255,84,112,0.35); color:#ffc2cd;}
+  .recommendation-box.MEDIUM{background:rgba(255,180,84,0.10); border:1px solid rgba(255,180,84,0.35); color:#ffe1b8;}
+  .recommendation-box.LOW{background:rgba(61,220,151,0.10); border:1px solid rgba(61,220,151,0.3); color:#c1f5dd;}
+  /* Same problem as .risk-chip: these pale pastels (#ffc2cd etc) are tuned
+     for readability against dark navy and measure badly against a light
+     beige box background instead. Light mode reuses the already-deepened
+     --risk-* variables here (5.3-6.4:1 against this box's actual
+     background), rather than a third hardcoded palette. */
+  :root[data-theme="light"] .recommendation-box.HIGH{color:var(--risk-high);}
+  :root[data-theme="light"] .recommendation-box.MEDIUM{color:var(--risk-med);}
+  :root[data-theme="light"] .recommendation-box.LOW{color:var(--risk-low);}
+  .chat-transcript{
+    margin-top:16px; padding:14px 16px; border-radius:12px; background:var(--input-bg);
+    font-size:12.5px; line-height:1.6; color:var(--white-dim); white-space:pre-wrap;
+    font-family:'JetBrains Mono',monospace; max-height:140px; overflow-y:auto;
+  }
+  .evidence-gallery{display:flex; gap:14px; flex-wrap:wrap; padding-top:2px;}
+  .evidence-item{display:flex; flex-direction:column; gap:6px; width:180px; text-decoration:none;}
+  .evidence-item img{
+    width:180px; height:135px; object-fit:cover; border-radius:10px; display:block;
+    border:1px solid var(--glass-border); background:#000;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  a.evidence-item:hover img{transform:scale(1.03); border-color:rgba(59,130,246,0.5);}
+  .evidence-caption{font-size:11.5px; color:var(--white-faint); text-align:center;}
+  .evidence-placeholder{
+    width:180px; height:135px; border-radius:10px; border:1px dashed var(--glass-border);
+    display:flex; align-items:center; justify-content:center; color:var(--white-faint);
+  }
+  .evidence-placeholder svg{width:30px; height:30px;}
+  .evidence-placeholder-photo{
+    width:180px; height:135px; border-radius:10px; border:1px dashed var(--glass-border);
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(160deg, rgba(59,130,246,0.16), rgba(34,211,238,0.07));
+  }
+  .evidence-placeholder-icon{font-size:40px; filter:grayscale(0.15);}
+  .evidence-caption i{display:block; font-size:10px; font-style:normal; opacity:0.75; margin-top:1px;}
+  .warehouse-note{
+    margin-top:12px; padding:12px 14px; border-radius:12px; font-size:12.5px;
+    background:rgba(34,211,238,0.08); border:1px dashed rgba(34,211,238,0.4); color:#bdeeff;
+  }
+  :root[data-theme="light"] .warehouse-note{color:#095f6e;}
+
+  /* ---------- Lower grid: models / shap / impact ---------- */
+  .lower-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:18px;}
+  @media (max-width:980px){.lower-grid{grid-template-columns:1fr;}}
+
+  table.model-table{width:100%; border-collapse:collapse; font-size:13px;}
+  table.model-table th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px;
+    color:var(--white-faint); padding:8px 12px; border-bottom:1px solid var(--glass-border);
+  }
+  table.model-table td{padding:11px 12px; border-bottom:1px solid rgba(255,255,255,0.04);}
+  table.model-table tr.best td{color:var(--accent-text); font-weight:600;}
+  .best-tag{
+    font-size:9.5px; background:rgba(34,211,238,0.15); color:var(--accent-text);
+    padding:2px 7px; border-radius:20px; margin-left:8px; letter-spacing:0.4px;
+  }
+  .model-name-cell{display:flex; align-items:center;}
+
+  .shap-row{display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:0 20px;}
+  .shap-row .feat{font-size:12px; color:var(--white-dim); width:150px; flex-shrink:0; font-family:'JetBrains Mono',monospace;}
+  .shap-row .track{flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:6px; overflow:hidden;}
+  .shap-row .fill{height:100%; border-radius:6px; background:linear-gradient(90deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));}
+  .shap-row .val{font-size:11.5px; color:var(--white-faint); width:52px; text-align:right; font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- Customer return-frequency chart ---------- */
+  .freq-row{display:flex; align-items:center; gap:12px; margin-bottom:11px; padding:0 20px;}
+  .freq-row .freq-label{
+    font-size:12.5px; color:var(--white-dim); width:190px; flex-shrink:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+  }
+  .freq-row .freq-flag{
+    font-size:9px; font-weight:700; letter-spacing:0.4px; flex-shrink:0;
+    background:rgba(255,84,112,0.16); color:var(--risk-high); border:1px solid rgba(255,84,112,0.4);
+    padding:2px 6px; border-radius:20px; font-family:'JetBrains Mono',monospace;
+  }
+  .freq-row .freq-track{flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:6px; overflow:hidden;}
+  .freq-row .freq-fill{height:100%; border-radius:6px; background:linear-gradient(90deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));}
+  .freq-row .freq-fill.flagged{background:var(--risk-high);}
+  .freq-row .freq-val{font-size:11.5px; color:var(--white-faint); width:20px; text-align:right; font-family:'JetBrains Mono',monospace;}
+  .freq-empty{font-size:12.5px; color:var(--white-faint); padding:4px 20px 18px;}
+
+  /* ---------- Fraud Rule Management ---------- */
+  .rule-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.05);}
+  .rule-row:last-child{border-bottom:none;}
+  .rule-row .rule-info{flex:1; min-width:0;}
+  .rule-row .rule-label{font-size:13px; font-weight:600;}
+  .rule-row .rule-desc{font-size:11.5px; color:var(--white-faint); margin-top:2px;}
+  .rule-row .rule-input-wrap{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+  .rule-row input{
+    width:80px; background:var(--input-bg); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--white); font-size:13px; padding:7px 9px; font-family:'JetBrains Mono',monospace; text-align:right;
+  }
+  .rule-row input:disabled{opacity:0.5; cursor:not-allowed;}
+  .rule-row input:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .rule-row .rule-unit{font-size:12px; color:var(--white-faint); width:16px;}
+  .rules-readonly-note{font-size:11.5px; color:var(--white-faint); padding-top:12px; text-align:center;}
+
+  /* ---------- Customer Risk Profile ---------- */
+  .risk-profile-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px;}
+  .risk-profile-header h4{font-family:'Space Grotesk',sans-serif; font-size:15px;}
+  .risk-profile-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;}
+  .risk-stat{padding:10px 8px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid var(--glass-border); text-align:center;}
+  .risk-stat .val{font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700;}
+  .risk-stat .lbl{font-size:9.5px; color:var(--white-faint); text-transform:uppercase; letter-spacing:0.4px; margin-top:3px;}
+  .risk-profile-cases{max-height:220px; overflow-y:auto;}
+  .risk-profile-case{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12.5px; cursor:pointer;}
+  .risk-profile-case:hover .rp-reason{color:var(--accent-text);}
+  .risk-profile-case:last-child{border-bottom:none;}
+  .customer-name-link{cursor:pointer; text-decoration:underline; text-decoration-style:dotted; text-underline-offset:2px;}
+  .customer-name-link:hover{color:var(--accent-text);}
+
+  /* ---------- Audit Log ---------- */
+  .audit-log{max-height:260px; overflow-y:auto;}
+  .audit-entry{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12.5px; align-items:flex-start;}
+  .audit-entry:last-child{border-bottom:none;}
+  .audit-entry .audit-time{font-family:'JetBrains Mono',monospace; color:var(--white-faint); font-size:11px; flex-shrink:0; width:78px; padding-top:2px;}
+  .audit-entry .audit-type{
+    flex-shrink:0; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px;
+    padding:3px 8px; border-radius:20px; height:fit-content;
+  }
+  .audit-entry .audit-type.case{background:rgba(59,130,246,0.14); color:var(--accent-text);}
+  .audit-entry .audit-type.decision{background:rgba(61,220,151,0.14); color:var(--risk-low);}
+  .audit-entry .audit-type.rule{background:rgba(255,180,84,0.14); color:var(--risk-med);}
+  .audit-entry .audit-text{flex:1; color:var(--white-dim);}
+  .audit-entry .audit-actor{color:var(--white-faint); font-size:11.5px;}
+
+  /* ---------- Business impact ---------- */
+  .impact-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px;}
+  @media (max-width:980px){.impact-row{grid-template-columns:1fr;}}
+  .impact-card{padding:20px;}
+  .impact-card .icon{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    background:rgba(59,130,246,0.14); margin-bottom:12px;}
+  .impact-card .big{font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; margin-bottom:4px;}
+  .impact-card .lbl{font-size:12.5px; color:var(--white-faint);}
+  .impact-note{font-size:11px; color:var(--white-faint); padding:0 20px 18px; line-height:1.6;}
+
+  /* ---------- Vision agent / camera ---------- */
+  .vision-panel{padding:20px 22px 22px;}
+  .camera-wrap{
+    position:relative; border-radius:14px; overflow:hidden; background:#000;
+    aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--glass-border); margin-bottom:14px;
+  }
+  #camera-video, #camera-canvas{width:100%; height:100%; object-fit:cover; display:none;}
+  #camera-placeholder{color:var(--white-faint); font-size:13px; text-align:center; padding:20px;}
+  .camera-controls{display:flex; gap:10px; flex-wrap:wrap;}
+  #vision-result{margin-top:14px;}
+  input[type=file]{display:none;}
+
+  /* ---------- Comments / review workflow ---------- */
+  .comments-block{margin-top:18px;}
+  .comment-item{
+    display:flex; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+    font-size:12.5px; align-items:flex-start;
+  }
+  .comment-avatar{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--blue-electric),var(--blue-cyan));
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#04101f; font-family:'Space Grotesk',sans-serif;
+  }
+  .comment-body .who{font-size:11px; color:var(--white-faint); margin-bottom:2px;}
+  .comment-body .who b{color:var(--white-dim);}
+  .action-tag{font-size:9.5px; padding:2px 7px; border-radius:20px; margin-left:6px; letter-spacing:0.4px; font-family:'JetBrains Mono',monospace;}
+  .action-tag.escalate{background:rgba(255,84,112,0.16); color:var(--risk-high);}
+  .action-tag.approve{background:rgba(61,220,151,0.14); color:var(--risk-low);}
+  .action-tag.reject{background:rgba(255,84,112,0.16); color:var(--risk-high);}
+  .action-tag.note{background:rgba(255,255,255,0.08); color:var(--white-dim);}
+  .comment-form{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .comment-form textarea{
+    flex:1 1 100%; min-height:56px; resize:vertical;
+    background:var(--input-bg); border:1px solid var(--glass-border); border-radius:10px;
+    color:var(--white); font-family:'Inter',sans-serif; font-size:12.5px; padding:10px 12px;
+  }
+  .comment-form textarea:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .comment-form select, .comment-form input[type=text]{
+    background:var(--input-bg); border:1px solid var(--glass-border); border-radius:10px;
+    color:var(--white); font-size:12px; padding:8px 10px; font-family:'Inter',sans-serif;
+  }
+  .comment-form select option{background:var(--bg-deep);}
+
+  /* ---------- Invoice + transcript tools ---------- */
+  .tools-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;}
+  @media (max-width:980px){.tools-grid{grid-template-columns:1fr;}}
+  .tool-panel{padding:20px 22px 22px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+  .field-row label, .field-full label{font-size:11px; color:var(--white-faint); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;}
+  .field-row input, .field-full input, .field-full textarea{
+    width:100%; background:var(--input-bg); border:1px solid var(--glass-border);
+    border-radius:10px; color:var(--white); font-size:13px; padding:9px 11px; font-family:'Inter',sans-serif;
+  }
+  .field-full textarea{min-height:110px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6;}
+  .field-row input:focus, .field-full input:focus, .field-full textarea:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .field-full{margin-bottom:10px;}
+  .drop-zone{
+    border:1.5px dashed rgba(59,130,246,0.45); border-radius:12px; padding:22px;
+    text-align:center; color:var(--white-faint); font-size:12.5px; cursor:pointer;
+    transition:background .15s ease, border-color .15s ease; margin-bottom:12px;
+  }
+  .drop-zone:hover, .drop-zone.drag{background:rgba(59,130,246,0.07); border-color:var(--accent-text);}
+  .drop-zone .file-name{color:var(--accent-text); font-family:'JetBrains Mono',monospace; margin-top:6px;}
+  .verdict-chip{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+    padding:5px 12px; border-radius:20px; letter-spacing:0.5px; margin-bottom:10px;
+  }
+  .verdict-chip.VERIFIED{background:rgba(61,220,151,0.14); color:var(--risk-low); border:1px solid rgba(61,220,151,0.35);}
+  .verdict-chip.REVIEW{background:rgba(255,180,84,0.16); color:var(--risk-med); border:1px solid rgba(255,180,84,0.4);}
+  .verdict-chip.SUSPECT{background:rgba(255,84,112,0.16); color:var(--risk-high); border:1px solid rgba(255,84,112,0.4);}
+
+  /* ---------- View switcher (Customer / Company) ---------- */
+  .view-switch{
+    display:flex; gap:4px; padding:5px; border-radius:12px;
+  }
+  .view-switch button{
+    background:transparent; border:none; color:var(--white-dim); cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+    padding:9px 18px; border-radius:9px; transition:background .15s ease, color .15s ease;
+  }
+  .view-switch button.active{
+    background:var(--btn-gradient);
+    color:var(--btn-text);
+  }
+  #customer-view{display:none;}
+  body.customer-mode #customer-view{display:block;}
+  body.customer-mode #company-view{display:none;}
+
+  /* ---------- Customer portal ---------- */
+  .portal-hero{
+    text-align:center; padding:38px 20px 30px; max-width:640px; margin:0 auto;
+  }
+  .portal-hero h2{
+    font-family:'Space Grotesk',sans-serif; font-size:clamp(24px,4vw,34px); font-weight:700;
+    background:linear-gradient(135deg, var(--white), var(--blue-cyan));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:10px;
+  }
+  /* dark-charcoal-to-cyan in dark mode reads fine (cyan pops on navy); in
+     light mode --white resolves to dark charcoal already, so only the
+     cyan endpoint needs deepening (same #0b639e as --accent-text) or the
+     right half of the heading fades toward illegible pale cyan on beige. */
+  :root[data-theme="light"] .portal-hero h2{background-image:linear-gradient(135deg, var(--white), #0b639e);}
+  .portal-hero p{color:var(--white-dim); font-size:14px; line-height:1.6;}
+  .portal-card{max-width:820px; margin:0 auto 20px; padding:26px 28px;}
+  .portal-card h3{font-family:'Space Grotesk',sans-serif; font-size:15px; margin-bottom:16px; display:flex; align-items:center; gap:10px;}
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:22px; height:22px; border-radius:7px; font-size:12px; font-weight:700;
+    background:linear-gradient(135deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan)); color:#04101f;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .portal-layout{display:grid; grid-template-columns:1.05fr .95fr; gap:20px; align-items:start;}
+  @media (max-width:980px){.portal-layout{grid-template-columns:1fr;}}
+  .assistant-card{
+    padding:16px 16px 14px;
+    background:linear-gradient(165deg, rgba(59,130,246,0.14), rgba(255,255,255,0.03) 65%);
+    border:1px solid rgba(59,130,246,0.3);
+    border-radius:16px; display:flex; flex-direction:column; position:sticky; top:16px;
+    backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%);
+    box-shadow:inset 0 1px 0 var(--glass-highlight), 0 12px 36px rgba(1,4,16,0.4);
+  }
+  .assistant-card .assistant-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .assistant-card .assistant-head-title{display:flex; align-items:center; gap:9px;}
+  .assistant-card .assistant-icon{
+    width:30px; height:30px; border-radius:9px; flex-shrink:0;
+    background:linear-gradient(135deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));
+    display:flex; align-items:center; justify-content:center; box-shadow:0 0 14px var(--blue-glow);
+  }
+  .assistant-card .assistant-head h4{font-size:14px; font-family:'Space Grotesk',sans-serif;}
+  .assistant-card .assistant-head .sub{font-size:11px; color:var(--white-faint);}
+  .assistant-pill{display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:6px 10px; border-radius:999px; background:rgba(61,220,151,0.12); color:var(--risk-low); flex-shrink:0;}
+  .assistant-pill::before{content:''; width:7px; height:7px; border-radius:50%; background:currentColor; box-shadow:0 0 10px currentColor; animation:pulse 2s infinite;}
+  .chat-thread{display:flex; flex-direction:column; gap:12px; max-height:320px; overflow-y:auto; padding-right:4px; margin-bottom:12px;}
+  .chat-row{display:flex; align-items:flex-end; gap:8px;}
+  .chat-row.customer{flex-direction:row-reverse;}
+  .chat-avatar{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; font-size:10.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif;
+    color:#04101f;
+  }
+  .chat-avatar.agent{background:linear-gradient(135deg, var(--blue-electric), var(--blue-light) 55%, var(--blue-cyan));}
+  .chat-avatar.user{background:linear-gradient(135deg, #ffb454, #ff8a5b);}
+  .chat-bubble{padding:10px 13px; border-radius:14px; font-size:13px; line-height:1.55; max-width:80%;}
+  .chat-row.customer .chat-bubble{background:linear-gradient(135deg, rgba(59,130,246,0.28), rgba(34,211,238,0.2)); border:1px solid rgba(59,130,246,0.35); border-bottom-right-radius:4px;}
+  .chat-row.agent .chat-bubble{background:rgba(147,197,253,0.075); border:1px solid var(--glass-border); border-bottom-left-radius:4px;}
+  .typing-dots{display:flex; gap:4px; padding:13px;}
+  .typing-dots span{width:6px; height:6px; border-radius:50%; background:var(--white-faint); animation:typingBounce 1.2s infinite ease-in-out;}
+  .typing-dots span:nth-child(2){animation-delay:.15s;}
+  .typing-dots span:nth-child(3){animation-delay:.3s;}
+  @keyframes typingBounce{0%,60%,100%{opacity:.3; transform:translateY(0);} 30%{opacity:1; transform:translateY(-3px);}}
+  .chat-input-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .chat-input-row input{flex:1; min-width:160px;}
+  .chat-input-row button:disabled{opacity:.5; cursor:default; transform:none !important;}
+  .assistant-foot{font-size:11px; color:var(--white-faint); margin-top:10px; line-height:1.6; text-align:center;}
+  .portal-photo-wrap{
+    position:relative; border-radius:12px; overflow:hidden; background:#000;
+    aspect-ratio:16/9; display:none; align-items:center; justify-content:center;
+    border:1px solid var(--glass-border); margin-bottom:10px;
+  }
+  .portal-photo-wrap.show{display:flex;}
+  #portal-video, #portal-canvas{width:100%; height:100%; object-fit:cover; display:none;}
+  .portal-status{
+    max-width:640px; margin:0 auto 20px; padding:26px 28px; text-align:center; display:none;
+  }
+  .portal-status.show{display:block;}
+  .portal-status .status-icon{font-size:42px; margin-bottom:12px;}
+  .portal-status h3{font-family:'Space Grotesk',sans-serif; font-size:19px; margin-bottom:10px;}
+  .portal-status p{color:var(--white-dim); font-size:13.5px; line-height:1.7;}
+  .portal-status .case-ref{
+    display:inline-block; margin-top:14px; padding:8px 16px; border-radius:10px;
+    background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.3);
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent-text);
+  }
+  select.portal-select{
+    width:100%; background:var(--input-bg); border:1px solid var(--glass-border);
+    border-radius:10px; color:var(--white); font-size:13px; padding:9px 11px; font-family:'Inter',sans-serif;
+  }
+  select.portal-select option{background:var(--bg-deep);}
+  select.portal-select:focus{outline:none; border-color:rgba(59,130,246,0.5);}
+  .source-tag{
+    font-size:9px; padding:2px 6px; border-radius:20px; margin-left:6px;
+    background:rgba(34,211,238,0.14); color:var(--accent-text); letter-spacing:0.4px;
+    font-family:'JetBrains Mono',monospace; vertical-align:middle;
+  }
+
+  /* ---------- Login ---------- */
+  #login-view{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--body-gradient);
+    padding:20px;
+  }
+  body.authed #login-view{display:none;}
+  body:not(.authed) header, body:not(.authed) #customer-view, body:not(.authed) #company-view, body:not(.authed) footer{display:none !important;}
+  .login-card{width:100%; max-width:420px; padding:34px 32px;}
+  .login-card .brand{justify-content:center; margin-bottom:22px;}
+  .login-card h2{font-family:'Space Grotesk',sans-serif; font-size:20px; text-align:center; margin-bottom:20px;}
+  .login-card .field-full input{padding:12px 13px;}
+  .login-error{color:var(--risk-high); font-size:12.5px; margin-top:10px; text-align:center; min-height:16px;}
+  .demo-creds{
+    margin-top:20px; padding:14px 16px; border-radius:12px;
+    background:rgba(59,130,246,0.07); border:1px dashed rgba(59,130,246,0.35);
+    font-size:12px; color:var(--white-dim); line-height:1.8;
+  }
+  .demo-creds b{color:var(--accent-text); font-family:'JetBrains Mono',monospace; font-weight:500;}
+  .demo-creds .fill-link{color:var(--accent-text); cursor:pointer; text-decoration:underline; font-size:11px;}
+  .user-chip{
+    display:flex; align-items:center; gap:8px; padding:8px 14px; font-size:12.5px;
+    color:var(--white-dim); font-family:'Inter',sans-serif;
+  }
+  .user-chip .comment-avatar{width:22px; height:22px; font-size:9px;}
+  .order-select-card{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    border:1px solid var(--glass-border); background:rgba(147,197,253,0.045);
+    cursor:pointer; margin-bottom:8px; transition:border-color .15s ease, background .15s ease;
+  }
+  .order-select-card:hover{background:rgba(147,197,253,0.09);}
+  .order-select-card.selected{border-color:rgba(59,130,246,0.55); background:rgba(59,130,246,0.09);}
+  .order-select-card .thumb{
+    width:38px; height:38px; border-radius:9px; flex-shrink:0;
+    background:rgba(59,130,246,0.14); display:flex; align-items:center; justify-content:center; font-size:17px;
+  }
+  .order-select-card .info{flex:1;}
+  .order-select-card .info .pname{font-size:13px; font-weight:600;}
+  .order-select-card .info .pmeta{font-size:11px; color:var(--white-faint); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .order-select-card .price{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;}
+  .ocr-status{font-size:11.5px; color:var(--accent-text); font-family:'JetBrains Mono',monospace; margin-top:6px; min-height:15px;}
+  .new-order-toggle{
+    font-size:12.5px; color:var(--accent-text); cursor:pointer; text-decoration:underline;
+    text-decoration-style:dotted; text-underline-offset:3px; margin-top:4px; display:inline-block;
+  }
+  .new-order-toggle:hover{color:var(--white);}
+  .new-order-form{
+    margin-top:12px; padding:14px 16px; border-radius:12px;
+    background:rgba(59,130,246,0.05); border:1px dashed rgba(59,130,246,0.35);
+  }
+  .new-order-note{font-size:11.5px; color:var(--white-faint); margin-top:8px; line-height:1.5;}
+  .new-order-error{color:var(--risk-high); font-size:12px; margin-top:8px; min-height:14px;}
+  .match-result{
+    margin-top:10px; padding:12px 14px; border-radius:12px; font-size:12.5px; display:none;
+  }
+  .match-result.show{display:block;}
+  .match-result.ok{background:rgba(61,220,151,0.10); border:1px solid rgba(61,220,151,0.3); color:#c1f5dd;}
+  .match-result.bad{background:rgba(255,84,112,0.10); border:1px solid rgba(255,84,112,0.35); color:#ffc2cd;}
+  :root[data-theme="light"] .match-result.ok{color:var(--risk-low);}
+  :root[data-theme="light"] .match-result.bad{color:var(--risk-high);}
+
+  footer{text-align:center; color:var(--white-faint); font-size:11.5px; margin-top:30px;}
+  footer a{color:var(--accent-text); text-decoration:none;}
+</style>
+</head>
+<body>
+
+<!-- Deploy-time config: edit these two lines when hosting this on a real
+     domain (see DEPLOYMENT.md). Left blank, the app behaves exactly like
+     local dev: no passphrase gate, backend assumed at localhost:8000. -->
+<script>
+  window.RETURNSHIELD_API_BASE = '';        // e.g. 'https://api.returnshield.ai'
+  window.RETURNSHIELD_SITE_PASSPHRASE = ''; // must match the backend's SITE_ACCESS_PASSPHRASE env var
+</script>
+
+<!-- ======================= SITE ACCESS GATE =======================
+     Only shown when RETURNSHIELD_SITE_PASSPHRASE above is non-empty. This is
+     a shared-secret speed bump for a publicly-hosted demo, not real auth —
+     see the comment above site_passphrase_gate() in backend/main.py. -->
+<div id="site-gate" style="display:none; position:fixed; inset:0; z-index:9999; background:linear-gradient(180deg, var(--bg-deep), var(--bg-void) 55%); align-items:center; justify-content:center;">
+  <div class="glass login-card" style="max-width:360px;">
+    <div class="brand" style="margin-bottom:18px;">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3z" stroke="#04101f" stroke-width="1.8" fill="rgba(4,16,31,0.25)"/><path d="M9 12l2 2 4-4" stroke="#04101f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div><h1 style="font-family:'Space Grotesk',sans-serif; font-size:20px;">ReturnShield AI</h1></div>
+    </div>
+    <p style="font-size:13px; color:var(--white-faint); margin-bottom:14px;">This is a private demo. Enter the access passphrase to continue.</p>
+    <input type="password" id="site-gate-input" placeholder="Passphrase" autocomplete="off" style="width:100%; margin-bottom:10px;">
+    <div id="site-gate-error" style="display:none; color:var(--risk-high); font-size:12.5px; margin-bottom:10px;">Incorrect passphrase.</div>
+    <button class="primary" id="site-gate-submit" style="width:100%; padding:12px;">Enter</button>
+  </div>
+</div>
+
+<!-- ============================ LOGIN ============================ -->
+<div id="login-view">
+  <div class="glass login-card">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3z" stroke="#04101f" stroke-width="1.8" fill="rgba(4,16,31,0.25)"/><path d="M9 12l2 2 4-4" stroke="#04101f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div><h1 style="font-family:'Space Grotesk',sans-serif; font-size:20px;">ReturnShield AI</h1></div>
+    </div>
+    <h2>Sign in</h2>
+    <div class="field-full"><label>Email</label><input type="text" id="login-email" placeholder="you@example.com" autocomplete="off"></div>
+    <div class="field-full"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="primary" id="login-btn" style="width:100%; padding:12px; margin-top:6px;">Sign in</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="demo-creds">
+      <div style="margin-bottom:6px; color:var(--white-faint); text-transform:uppercase; letter-spacing:0.6px; font-size:10px;">Demo accounts (this is a prototype — not real auth)</div>
+      🛍️ Customer: <b>customer@demo.com</b> / <b>customer123</b> <span class="fill-link" data-fill="customer">use</span><br>
+      🛡️ Admin: <b>admin@returnshield.ai</b> / <b>admin123</b> <span class="fill-link" data-fill="admin">use</span>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V5l-8-3z" stroke="#04101f" stroke-width="1.8" fill="rgba(4,16,31,0.25)"/><path d="M9 12l2 2 4-4" stroke="#04101f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <h1>ReturnShield AI</h1>
+      <p>Multi-Agent Fraud Detection Platform · Shipment Returns</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="view-switch glass" id="view-switch-wrap">
+      <button id="tab-customer">Customer Portal</button>
+      <button id="tab-company" class="active">Company Dashboard</button>
+    </div>
+    <div class="user-chip glass" id="user-chip"></div>
+    <span class="backend-status-pill off" id="backend-status">Checking backend…</span>
+    <div class="live-pill glass" id="live-pill"><span class="live-dot"></span><span id="clock">LIVE</span></div>
+    <button class="ghost theme-toggle" id="theme-toggle-btn" title="Switch between dark and light mode">🌙</button>
+    <button class="ghost" id="reset-btn">Reset feed</button>
+    <button class="primary" id="simulate-btn">▸ Simulate incoming return</button>
+    <button class="ghost" id="logout-btn">Log out</button>
+  </div>
+</header>
+
+<!-- ============================ CUSTOMER VIEW ============================ -->
+<div id="customer-view">
+  <div class="portal-hero">
+    <h2>Start your return</h2>
+    <p>Tell us what happened and we'll take care of the rest. Most returns are approved instantly — some may take up to 24 hours while our team reviews the details.</p>
+  </div>
+
+  <div class="glass portal-card" id="portal-form-card">
+    <div class="portal-layout">
+      <div>
+        <h3><span class="step-num">1</span>Which order are you returning?</h3>
+        <div id="order-picker"></div>
+        <div class="new-order-toggle" id="new-order-toggle">+ Don't see your order here? Add one to return</div>
+        <div class="new-order-form" id="new-order-form" style="display:none;">
+          <div class="field-row">
+            <div><label>Product name</label><input type="text" id="no-product" placeholder="e.g. Sony WH-1000XM5 Headphones"></div>
+            <div><label>Brand</label><input type="text" id="no-brand" placeholder="e.g. Sony"></div>
+          </div>
+          <div class="field-row">
+            <div><label>Category</label>
+              <select class="portal-select" id="no-category">
+                <option>Electronics</option><option>Phones</option><option>Laptops</option><option>Apparel</option>
+                <option>Shoes</option><option>Home &amp; Kitchen</option><option>Beauty</option><option>Toys</option>
+                <option>Sporting Goods</option><option>Jewelry</option>
+              </select>
+            </div>
+            <div><label>Purchase price ($)</label><input type="number" id="no-value" placeholder="e.g. 349.99" min="0" step="0.01"></div>
+          </div>
+          <div class="field-row">
+            <div><label>Days since delivery</label><input type="number" id="no-days" placeholder="e.g. 3" min="0"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="ghost" id="no-cancel-btn" type="button" style="flex:1;">Cancel</button>
+              <button class="primary" id="no-add-btn" type="button" style="flex:1;">Use this order</button>
+            </div>
+          </div>
+          <div class="new-order-note">📎 Since this order isn't in our system, you'll need to attach an invoice or receipt as proof of purchase in step 5 before submitting.</div>
+          <div id="no-error" class="new-order-error"></div>
+        </div>
+
+        <h3 style="margin-top:22px;"><span class="step-num">2</span>Return details</h3>
+        <div class="field-row">
+          <div><label>Reason for return</label>
+            <select class="portal-select" id="p-reason">
+              <option>Item arrived damaged</option>
+              <option>Wrong item sent</option>
+              <option>Item not as described</option>
+              <option>Defective / stopped working</option>
+              <option>Missing parts/accessories</option>
+              <option>Wrong size / needs exchange</option>
+              <option>Changed my mind</option>
+              <option>Item never arrived</option>
+            </select>
+          </div>
+          <div><label>What item are you sending back?</label><input type="text" id="p-item-returned" placeholder="e.g. Nike Air Max 90 sneakers"></div>
+        </div>
+
+        <h3 style="margin-top:18px;"><span class="step-num">3</span>Photo of the item <span id="p-photo-required-badge" style="font-size:11px; font-weight:600; color:var(--risk-high); text-transform:uppercase; letter-spacing:0.5px; margin-left:2px;">Required</span></h3>
+        <div class="field-full">
+          <div class="portal-photo-wrap" id="portal-photo-wrap">
+            <video id="portal-video" autoplay playsinline muted></video>
+            <canvas id="portal-canvas"></canvas>
+          </div>
+          <div class="camera-controls">
+            <button class="ghost" id="p-camera-btn" type="button">Take a photo</button>
+            <button class="ghost" id="p-capture-btn" type="button" style="display:none;">Capture</button>
+            <button class="ghost" id="p-upload-btn" type="button">Upload a photo</button>
+            <input type="file" id="p-file-input" accept="image/*">
+            <span id="p-photo-status" style="font-size:12px; color:var(--white-faint); align-self:center;"></span>
+          </div>
+          <div class="ocr-status" id="p-photo-ocr"></div>
+        </div>
+
+        <h3 style="margin-top:12px;"><span class="step-num">4</span>Photo of the serial number / label <span id="p-serial-required-badge" style="font-size:11px; font-weight:600; color:var(--risk-high); text-transform:uppercase; letter-spacing:0.5px; margin-left:2px;">Required</span></h3>
+        <div class="field-full">
+          <div class="portal-photo-wrap" id="portal-serial-wrap">
+            <video id="p-serial-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+            <canvas id="p-serial-canvas" style="width:100%; height:100%; object-fit:contain; display:none;"></canvas>
+          </div>
+          <div class="camera-controls">
+            <button class="ghost" id="p-serial-camera-btn" type="button">Take a photo of the serial/label</button>
+            <button class="ghost" id="p-serial-capture-btn" type="button" style="display:none;">Capture</button>
+            <button class="ghost" id="p-serial-upload-btn" type="button">Upload a photo</button>
+            <input type="file" id="p-serial-file-input" accept="image/*">
+            <span id="p-serial-status" style="font-size:12px; color:var(--white-faint); align-self:center;"></span>
+          </div>
+          <div class="ocr-status" id="p-serial-ocr"></div>
+        </div>
+
+        <h3 style="margin-top:12px;"><span class="step-num">5</span>Invoice or receipt (any retailer — Amazon, Walmart, Target…)</h3>
+        <div class="field-full">
+          <div class="portal-photo-wrap" id="portal-inv-wrap">
+            <video id="p-inv-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+            <canvas id="p-inv-canvas" style="width:100%; height:100%; object-fit:contain; display:none;"></canvas>
+          </div>
+          <div class="camera-controls">
+            <button class="ghost" id="p-inv-camera-btn" type="button">Capture invoice</button>
+            <button class="ghost" id="p-inv-capture-btn" type="button" style="display:none;">Snap</button>
+            <button class="ghost" id="p-inv-upload-btn" type="button">Upload invoice</button>
+            <input type="file" id="p-inv-file-input" accept="image/*,.pdf">
+            <span id="p-inv-status" style="font-size:12px; color:var(--white-faint); align-self:center;"></span>
+          </div>
+          <div class="ocr-status" id="p-inv-ocr"></div>
+        </div>
+      </div>
+
+      <div class="assistant-card">
+        <div class="assistant-head">
+          <div class="assistant-head-title">
+            <div class="assistant-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2a1 1 0 011 1v2.06A8.002 8.002 0 0120 13v3a2 2 0 01-2 2h-1a2 2 0 01-2 2h-2a2 2 0 01-2-2H9a2 2 0 01-2-2H6a2 2 0 01-2-2v-3a8.002 8.002 0 017-7.94V3a1 1 0 011-1zm-4 9a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#04101f"/></svg></div>
+            <div>
+              <h4>Return Assistant</h4>
+              <div class="sub">Tell us what happened, in your own words</div>
+            </div>
+          </div>
+          <span class="assistant-pill">Online</span>
+        </div>
+        <div class="chat-thread" id="portal-chat-thread"></div>
+        <div class="chat-input-row">
+          <input type="text" id="portal-chat-input" placeholder="Describe what happened...">
+          <button class="primary" id="portal-chat-send" type="button">Send</button>
+        </div>
+        <div class="assistant-foot">Your conversation is shared with our review team along with your return request.</div>
+      </div>
+    </div>
+
+    <div class="match-result" id="p-match-result"></div>
+    <button class="primary" id="p-submit-btn" style="width:100%; margin-top:14px; padding:13px;">Submit return request</button>
+  </div>
+
+  <div class="glass portal-status" id="portal-status"></div>
+  <p style="text-align:center; font-size:11px; color:var(--white-faint); max-width:520px; margin:0 auto;">Demo portal — submissions run through the full ReturnShield pipeline and appear live in the Company Dashboard tab.</p>
+</div>
+
+<!-- ============================ COMPANY VIEW ============================ -->
+<div id="company-view">
+
+<section class="kpi-row">
+  <div class="glass kpi"><div class="label">Cases monitored</div><div class="value" id="kpi-total">—</div><div class="sub">rolling live feed</div></div>
+  <div class="glass kpi risk-high"><div class="label">High risk cases</div><div class="value" id="kpi-high">—</div><div class="sub" id="kpi-high-sub">flagged for escalation</div></div>
+  <div class="glass kpi"><div class="label">Avg. fraud probability</div><div class="value" id="kpi-avg">—</div><div class="sub">across live feed</div></div>
+  <div class="glass kpi"><div class="label">Value at risk</div><div class="value" id="kpi-value">—</div><div class="sub">medium + high risk returns</div></div>
+</section>
+
+<section class="main-grid">
+  <div class="glass">
+    <div class="panel-head">
+      <div>
+        <h2>Flagged Return Queue</h2>
+        <div class="panel-sub" id="queue-sub"></div>
+      </div>
+      <span class="count" id="queue-count">0 cases</span>
+    </div>
+    <div class="queue-filters">
+      <input type="text" id="queue-search" placeholder="Search return ID, customer, reason, description...">
+      <select id="queue-filter-risk">
+        <option value="">All flagged</option>
+        <option value="HIGH">High risk</option>
+        <option value="MEDIUM">Medium risk</option>
+      </select>
+      <select id="queue-filter-source">
+        <option value="">All sources</option>
+        <option value="customer">Customer portal</option>
+        <option value="synthetic">Synthetic feed</option>
+      </select>
+      <button class="ghost" id="export-csv-btn" type="button">Export CSV</button>
+    </div>
+    <div id="case-list"></div>
+  </div>
+
+  <div class="glass" id="detail-wrap">
+    <div class="panel-head"><h2>Agent Decision Trace</h2><span class="count">Agents 1–5</span></div>
+    <div id="detail-panel"><div class="empty-state">Select a case from the queue to see the full multi-agent breakdown — pattern, trust, image, ML probability, and the final decision.</div></div>
+  </div>
+</section>
+
+<section class="glass" style="margin-bottom:18px;">
+  <div class="panel-head">
+    <h2>Customer Return Frequency</h2>
+    <span class="count" id="freq-chart-count"></span>
+  </div>
+  <div id="customer-freq-chart" style="padding:6px 0 18px;"></div>
+</section>
+
+<section class="tools-grid" style="margin-bottom:18px;">
+  <div class="glass">
+    <div class="panel-head">
+      <h2>Fraud Rule Management</h2>
+      <span class="count" id="rules-scope-note"></span>
+    </div>
+    <div id="fraud-rules-panel" style="padding:0 20px 20px;"></div>
+  </div>
+  <div class="glass">
+    <div class="panel-head">
+      <h2>Customer Risk Profile</h2>
+      <span class="count">click a customer anywhere to load</span>
+    </div>
+    <div style="padding:0 20px 8px;">
+      <input type="text" id="risk-profile-search" placeholder="Search by customer name, email, or CUST-id...">
+    </div>
+    <div id="customer-risk-profile" style="padding:8px 20px 20px;">
+      <div class="empty-state">Select a customer from the queue, frequency chart, or search above.</div>
+    </div>
+  </div>
+</section>
+
+<section class="glass" style="margin-bottom:18px;">
+  <div class="panel-head">
+    <h2>Audit Log</h2>
+    <span class="count" id="audit-log-count"></span>
+  </div>
+  <div id="audit-log-panel" style="padding:0 20px 18px;"></div>
+</section>
+
+<section class="lower-grid">
+  <div class="glass">
+    <div class="panel-head"><h2>Agent 4 — Model Comparison</h2><span class="count" id="model-count"></span></div>
+    <div style="padding:0 20px 18px;"><table class="model-table" id="model-table"></table></div>
+  </div>
+  <div class="glass">
+    <div class="panel-head"><h2>SHAP Feature Importance</h2><span class="count">explainability</span></div>
+    <div style="padding:14px 0 20px;" id="shap-chart"></div>
+  </div>
+</section>
+
+<div class="panel-head" style="padding:4px 4px 12px;"><h2 style="font-family:'Space Grotesk',sans-serif; font-size:16px;">Business Impact</h2></div>
+<section class="impact-row" id="impact-row"></section>
+<p class="impact-note" id="impact-note"></p>
+
+<section class="tools-grid">
+  <div class="glass tool-panel">
+    <div class="panel-head" style="padding:0 0 14px;"><h2>Agent 6 — Invoice Verification</h2><span class="count">upload + cross-check</span></div>
+    <div class="drop-zone" id="invoice-drop">
+      Drop the customer's invoice here, or click to browse<br>
+      <span style="font-size:11px;">(PDF, JPG, PNG — the document hash is used for duplicate detection)</span>
+      <div class="file-name" id="invoice-file-name"></div>
+    </div>
+    <input type="file" id="invoice-file-input" accept=".pdf,image/*">
+    <div class="field-row">
+      <div><label>Invoice amount ($)</label><input type="number" id="inv-amount" placeholder="e.g. 1299.00"></div>
+      <div><label>Invoice date</label><input type="date" id="inv-date"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Order ID on invoice</label><input type="text" id="inv-order-id" placeholder="ORD-000123"></div>
+      <div><label>Order record amount ($)</label><input type="number" id="inv-order-amount" placeholder="from order system"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Order date (record)</label><input type="date" id="inv-order-date"></div>
+      <div><label>Delivery date (record)</label><input type="date" id="inv-delivery-date"></div>
+    </div>
+    <button class="primary" id="verify-invoice-btn" style="margin-top:6px;">Verify invoice</button>
+    <div id="invoice-result" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="glass tool-panel">
+    <div class="panel-head" style="padding:0 0 14px;"><h2>Agent 2 — Live Transcript Analyzer</h2><span class="count">paste any chat</span></div>
+    <div class="field-full">
+      <label>Customer support chat transcript</label>
+      <textarea id="transcript-input" placeholder="Customer: The item never arrived.
+Agent: Our tracking shows it was delivered on Tuesday.
+Customer: I never received it, refund me right now or I will report you."></textarea>
+    </div>
+    <div class="field-row">
+      <div><label>Times this excuse used before (optional)</label><input type="number" id="excuse-count" value="0" min="0"></div>
+      <div style="display:flex; align-items:flex-end;"><button class="primary" id="analyze-transcript-btn" style="width:100%;">Analyze transcript</button></div>
+    </div>
+    <div id="transcript-result" style="margin-top:14px;"></div>
+  </div>
+</section>
+
+<section class="glass vision-panel">
+  <div class="panel-head" style="padding:0 0 16px;"><h2>Agent 3 — Image Verification (live demo)</h2><span class="count">camera / upload</span></div>
+  <div class="camera-wrap">
+    <video id="camera-video" autoplay playsinline muted></video>
+    <canvas id="camera-canvas"></canvas>
+    <div id="camera-placeholder">Camera preview will appear here.<br>Use a secure context (http://localhost or https) for camera access.</div>
+  </div>
+  <div class="camera-controls">
+    <button class="primary" id="start-camera-btn">Open camera</button>
+    <button class="ghost" id="capture-btn" disabled>Capture photo</button>
+    <button class="ghost" id="upload-btn">Upload photo instead</button>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+  <div id="vision-result"></div>
+</section>
+</div><!-- /company-view -->
+
+<footer>ReturnShield AI — prototype built on 100% synthetic data · Agents: Pattern Detection · NLP Trust · Image Verification · ML Fraud Model (RF/XGBoost/LightGBM/CatBoost) · Invoice Verification · LLM Decision Agent</footer>
+
+<script id="data-bundle" type="application/json">__DATA_BUNDLE__</script>
+<script>__APP_JS__</script>
+</body>
+</html>

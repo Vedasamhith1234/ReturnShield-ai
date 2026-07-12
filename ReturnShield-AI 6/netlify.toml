@@ -1,0 +1,28 @@
+# ReturnShield AI — Netlify configuration
+# Publishes dashboard/ directly (index.html, manifest.json, sw.js, icons/) —
+# no separate copy to keep in sync. index.html is itself fully self-contained
+# (all data, JS, and styles embedded via dashboard/build.py), so there's no
+# build step or package installation needed here either.
+
+[build]
+  publish = "dashboard"
+  command = "echo 'Static site - nothing to build'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow camera for the Agent 3 image-verification demo
+    Permissions-Policy = "camera=(self)"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

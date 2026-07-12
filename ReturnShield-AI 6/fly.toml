@@ -1,0 +1,28 @@
+# Fly.io config for the backend API only. Rename `app` below to something
+# available (Fly app names are globally unique) before running `fly launch`/
+# `fly deploy` — see DEPLOY.md for the full walkthrough.
+app = "returnshield-api"
+primary_region = "iad"
+
+[build]
+
+[env]
+  # Set the real secrets via `fly secrets set SITE_ACCESS_PASSPHRASE=...` /
+  # `fly secrets set RETRAIN_ADMIN_SECRET=...` instead of here — this file
+  # is committed to the repo. RETURNSHIELD_DB_PATH and RETURNSHIELD_MODEL_DIR
+  # are already set in the Dockerfile, both under /data below.
+
+[[mounts]]
+  source = "returnshield_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

@@ -1,0 +1,39 @@
+{
+  "results": {
+    "Random Forest": {
+      "accuracy": 0.9292,
+      "precision": 0.5625,
+      "recall": 0.9252,
+      "f1": 0.6996,
+      "roc_auc": 0.9866,
+      "confusion_matrix": [
+        [
+          1016,
+          77
+        ],
+        [
+          8,
+          99
+        ]
+      ]
+    },
+    "CatBoost": {
+      "accuracy": 0.9525,
+      "precision": 0.6736,
+      "recall": 0.9065,
+      "f1": 0.7729,
+      "roc_auc": 0.9871,
+      "confusion_matrix": [
+        [
+          1046,
+          47
+        ],
+        [
+          10,
+          97
+        ]
+      ]
+    }
+  },
+  "best_model": "CatBoost"
+}
